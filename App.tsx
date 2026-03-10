@@ -1,10 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import { Colors } from './src/constants/Colors';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+      <Text style={styles.welcomeText}>
+        Pet Shop App Initialized!
+      </Text>
       <StatusBar style="auto" />
     </View>
   );
@@ -13,8 +16,13 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.background,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.primary
+  }
 });
