@@ -1,29 +1,17 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
 import { Colors } from './src/constants/Colors';
-import Toast from 'react-native-toast-message'
+import Toast from 'react-native-toast-message';
+import { NavigationContainer } from '@react-navigation/native';
+import TabNavigator from './src/navigation/TabNavigator';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.welcomeText}>
-        Pet Shop App Initialized!
-      </Text>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <TabNavigator />
+      </NavigationContainer>
       <Toast />
-    </View>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  welcomeText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: Colors.primary
-  }
-});
