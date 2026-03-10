@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, PlusCircle, ShoppingCart } from 'lucide-react-native'; 
 import { Colors } from '../constants/Colors';
+import { usePetStore } from '../store/usePetStore';
 
 import HomeScreen from '../screens/HomeScreen';
 import AddPetScreen from '../screens/AddPetScreen';
@@ -11,6 +12,10 @@ import { RootTabParamList } from './types';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const TabNavigator = () => {
+
+    const cart = usePetStore((state) => state.cart);
+    const cartCount = cart.length;
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -56,6 +61,8 @@ const TabNavigator = () => {
         options={{
           tabBarIcon: ({ color, size }) => <ShoppingCart color={color} size={size} />,
           headerTitle: 'My Cart',
+           tabBarBadge: cartCount > 0 ? cartCount : undefined, 
+          tabBarBadgeStyle: { backgroundColor: Colors.secondary, color: 'white' },
         }}
       />
     </Tab.Navigator>
