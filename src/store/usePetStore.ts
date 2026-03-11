@@ -1,60 +1,83 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Pet, CartItem } from '../types/pet';
 
 interface PetState {
-  pets: Pet[]; 
+  pets: Pet[];
   cart: CartItem[];
-  addPet: (pet: Pet) => void; 
-  addToCart: (pet: Pet) => void; 
-  removeFromCart: (petId: string) => void; 
+  addPet: (pet: Pet) => void;
+  addToCart: (pet: Pet) => void;
+  removeFromCart: (petId: string) => void;
   getTotalPrice: () => number;
 }
 
-export const usePetStore = create<PetState>((set, get) => ({
-  pets: [
-    {
-      id: '1',
-      name: 'Buddy',
-      breed: 'Golden Retriever',
-      age: '2',
-      price: '500',
-      imageUrl: 'https://images.dog.ceo/breeds/retriever-golden/n02099601_3004.jpg',
-    },
-    {
-      id: '2',
-      name: 'Max',
-      breed: 'German Shepherd',
-      age: '3',
-      price: '700',
-      imageUrl: 'https://images.dog.ceo/breeds/danish-swedish-farmdog/ebba_001.jpg',
-    },
-  ],
-  
-  cart: [],
+export const usePetStore = create<PetState>()(
+  persist(
+    (set, get) => ({
+      pets: [
+        {
+          id: '1',
+          name: 'Buddy',
+          breed: 'Golden Retriever',
+          age: '2',
+          price: '500',
+          imageUrl:
+            'https://images.dog.ceo/breeds/retriever-golden/n02099601_3004.jpg',
+        },
+        {
+          id: '2',
+          name: 'Max',
+          breed: 'German Shepherd',
+          age: '3',
+          price: '700',
+          imageUrl:
+            'https://images.dog.ceo/breeds/danish-swedish-farmdog/ebba_001.jpg',
+        },
+      ],
 
-  addPet: (pet) => set((state) => ({ 
-    pets: [pet, ...state.pets] 
-  })),
+      cart: [],
 
-  addToCart: (pet) => set((state) => {
-    const existingItem = state.cart.find((item) => item.id === pet.id);
-    
-    if (existingItem) {
-      return {
-        cart: state.cart.map((item) =>
-          item.id === pet.id ? { ...item, quantity: item.quantity + 1 } : item
-        ),
-      };
+      addPet: (pet) =>
+        set((state) => ({
+          pets: [pet, ...state.pets],
+        })),
+
+      addToCart: (pet) =>
+        set((state) => {
+          const existingItem = state.cart.find((item) => item.id === pet.id);
+
+          if (existingItem) {
+            return {
+              cart: state.cart.map((item) =>
+                item.id === pet.id
+                  ? { ...item, quantity: item.quantity + 1 }
+                  : item
+              ),
+            };
+          }
+
+          return {
+            cart: [...state.cart, { ...pet, quantity: 1 }],
+          };
+        }),
+
+      removeFromCart: (petId) =>
+        set((state) => ({
+          cart: state.cart.filter((item) => item.id !== petId),
+        })),
+
+      getTotalPrice: () => {
+        const { cart } = get();
+        return cart.reduce(
+          (total, item) => total + Number(item.price) * item.quantity,
+          0
+        );
+      },
+    }),
+    {
+      name: 'pet-storage', // storage key
+      storage: createJSONStorage(() => AsyncStorage),
     }
-    return { cart: [...state.cart, { ...pet, quantity: 1 }] };
-  }),
-
-  removeFromCart: (petId) => set((state) => ({
-    cart: state.cart.filter((item) => item.id !== petId),
-  })),
-
-  getTotalPrice: () => {
-    const { cart } = get(); 
-    return cart.reduce((total, item) => total + (Number(item.price) * item.quantity), 0);
-  },
-}));
+  )
+);
