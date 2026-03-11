@@ -59,8 +59,8 @@ The app follows a **Modular Clean Architecture**:
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-link>
-   cd PetShopApp
+   git clone https://github.com/Shivangi-Space/PetShopApp.git
+   cd PetShop
 
 2. **Install Dependencies:**
 
