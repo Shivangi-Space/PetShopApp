@@ -26,7 +26,7 @@ export const usePetStore = create<PetState>((set, get) => ({
       breed: 'German Shepherd',
       age: '3',
       price: '700',
-      imageUrl: 'https://images.dog.ceo/breeds/germanshepherd/n02106662_16149.jpg',
+      imageUrl: 'https://images.dog.ceo/breeds/danish-swedish-farmdog/ebba_001.jpg',
     },
   ],
   
