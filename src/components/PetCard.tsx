@@ -36,17 +36,20 @@ const PetCard = ({ pet, onAddToCart }: PetCardProps) => {
             </View>
 
             <View style={styles.infoContainer}>
-                <Text style={styles.name}>{pet.name}</Text>
+                <View style={styles.cont}>
+                    <Text style={styles.name}>{pet.name}</Text>
+                <View style={styles.priceRow}>
+                    {/* <Text style={styles.priceLabel}>Price:</Text> */}
+                    <Text style={styles.priceValue}>${pet.price}</Text>
+                </View>
+                </View>
 
                 <View style={styles.breedRow}>
                     <Dog size={14} color={Colors.textLight} />
                     <Text style={styles.breed}>{pet.breed}</Text>
                 </View>
 
-                <View style={styles.priceRow}>
-                    <Text style={styles.priceLabel}>Price:</Text>
-                    <Text style={styles.priceValue}>${pet.price}</Text>
-                </View>
+                
 
                 <TouchableOpacity
                     style={styles.addButton}
@@ -83,6 +86,11 @@ const styles = StyleSheet.create({
     image: {
         width: '100%',
         height: '100%',
+    },
+    cont: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
     },
     placeholder: {
         flex: 1,
@@ -121,11 +129,11 @@ const styles = StyleSheet.create({
         marginBottom: 15
     },
     priceLabel: {
-        fontSize: 14,
+        fontSize: 16,
         color: Colors.textLight,
     },
     priceValue: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
         color: Colors.primary,
     },

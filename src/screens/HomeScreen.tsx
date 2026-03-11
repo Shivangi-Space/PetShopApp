@@ -16,7 +16,6 @@ const HomeScreen = () => {
             type: 'success',
             text1: 'Added to Cart',
             text2: `${pet.name} is waiting for you!`,
-            position: 'bottom',
         });
     }
 

@@ -8,6 +8,7 @@ import HomeScreen from '../screens/HomeScreen';
 import AddPetScreen from '../screens/AddPetScreen';
 import CartScreen from '../screens/CartScreen';
 import { RootTabParamList } from './types';
+import CustomHeader from '../components/CustomHeader';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -19,13 +20,16 @@ const TabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
+        header: ({ options }) => (
+          <CustomHeader title={options.headerTitle as string} />
+        ),
         tabBarActiveTintColor: Colors.primary,   
         tabBarInactiveTintColor: Colors.textLight, 
         tabBarStyle: {
           backgroundColor: Colors.card,
           borderTopWidth: 1,
           borderTopColor: Colors.border,
-          height: 60, 
+          height: 65, 
           paddingBottom: 8,
         },
         headerStyle: {
@@ -42,7 +46,7 @@ const TabNavigator = () => {
         component={HomeScreen} 
         options={{
           tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
-          headerTitle: 'Pet Shop', 
+          headerTitle: 'Pets list', 
         }}
       />
 

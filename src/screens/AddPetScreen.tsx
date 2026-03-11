@@ -8,7 +8,9 @@ import {
     Image,
     ActivityIndicator,
     Alert,
-    Linking
+    Linking,
+    KeyboardAvoidingView,
+    Platform
 } from 'react-native';
 import { Colors } from "../constants/Colors";
 import { useForm, Controller } from 'react-hook-form';
@@ -34,8 +36,8 @@ const AddPetScreen = () => {
 
     const pickImage = async (useCamera: boolean) => {
         try {
-            const permissionResult = useCamera 
-                ? await ImagePicker.requestCameraPermissionsAsync() 
+            const permissionResult = useCamera
+                ? await ImagePicker.requestCameraPermissionsAsync()
                 : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
             if (permissionResult.granted === false) {
@@ -55,7 +57,7 @@ const AddPetScreen = () => {
                         text2: `You need to grant ${useCamera ? 'camera' : 'gallery'} access to upload photos.`
                     });
                 }
-                return; 
+                return;
             }
 
             let result;
@@ -88,26 +90,48 @@ const AddPetScreen = () => {
 
     const onSubmit = async (data: PetFormData) => {
         if (!image) {
-            Toast.show({ type: 'error', text1: 'Error', text2: 'Please upload a text image' });
+            Toast.show({ 
+                type: 'error', 
+                text1: 'Image Required', 
+                text2: 'Please upload or fetch a pet image first.' 
+            });
             return;
         }
 
         setLoading(true);
         try {
-            await axios.post('https://reqres.in/api/users', { ...data, image });
+            const apiPayload = {
+                name: data.name,
+                breed: data.breed,
+                age: data.age,
+                price: data.price,
+                image: "image_uploaded_successfully" 
+            };
+
+            await axios.post('https://jsonplaceholder.typicode.com/posts', apiPayload);
+
             addPetToStore({
-                id: Math.random().toString(),
+                id: Math.random().toString(), // Generate a random ID
                 ...data,
-                imageUrl: image,
+                imageUrl: image, // The real local/fetched URI
             });
 
-            Toast.show({ type: 'success', text1: 'Success', text2: 'Pet listed successfully!' });
+            Toast.show({ 
+                type: 'success', 
+                text1: 'Success!', 
+                text2: `${data.name} has been listed for sale.` 
+            });
 
             reset();
             setImage(null);
-        }
-        catch (error) {
-            Toast.show({ type: 'error', text1: 'Submission Failed', text2: 'Something went wrong' });
+            
+        } catch (error: any) {
+            console.log("Full Error:", error);
+            Toast.show({ 
+                type: 'error', 
+                text1: 'Submission Failed', 
+                text2: 'The mock server rejected the request. Please try again.' 
+            });
         } finally {
             setLoading(false);
         }
@@ -138,101 +162,107 @@ const AddPetScreen = () => {
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-            <View style={styles.imageSection}>
-                {image ? (
-                    <Image source={{ uri: image }} style={styles.previewImage} />
-                ) : (
-                    <View style={styles.imagePlaceholder}>
-                        <ImageIcon color={Colors.textLight} size={30} />
-                        <Text style={{ color: Colors.textLight }}>
-                            No Image selected
-                        </Text>
-                    </View>
-                )}
-
-                <View style={styles.row}>
-                    <TouchableOpacity style={styles.imageBtn} onPress={() => pickImage(false)}>
-                        <ImageIcon size={20} color="white" />
-                        <Text style={styles.btnText}>
-                            Gallery
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={[styles.imageBtn, { backgroundColor: Colors.textLight }]} onPress={() => pickImage(true)}>
-                        <Camera size={20} color="white" />
-                        <Text style={styles.btnText}>
-                            Camera
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                    style={styles.randomBtn}
-                    onPress={fetchRandomImage}
-                    disabled={fetchingImage}
-                >
-                    {fetchingImage ? (
-                        <ActivityIndicator color={Colors.primary} />
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        >
+            <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+                <View style={styles.imageSection}>
+                    {image ? (
+                        <Image source={{ uri: image }} style={styles.previewImage} />
                     ) : (
-                        <Text style={styles.randomBtnText}>
-                            ✨ Get Random Dog Photo
-                        </Text>
+                        <View style={styles.imagePlaceholder}>
+                            <ImageIcon color={Colors.textLight} size={30} />
+                            <Text style={{ color: Colors.textLight }}>
+                                No Image selected
+                            </Text>
+                        </View>
                     )}
-                </TouchableOpacity>
-            </View>
 
-            <View style={styles.formCard}>
-                <Controller
-                    control={control}
-                    name="name"
-                    render={({ field: { onChange, value } }) => (
-                        <CustomInput label="Pet Name" placeholder="e.g. Buddy" value={value} onChangeText={onChange} error={errors.name?.message} />
-                    )}
-                />
+                    <View style={styles.row}>
+                        <TouchableOpacity style={styles.imageBtn} onPress={() => pickImage(false)}>
+                            <ImageIcon size={20} color="white" />
+                            <Text style={styles.btnText}>
+                                Gallery
+                            </Text>
+                        </TouchableOpacity>
 
-                <Controller
-                    control={control}
-                    name="breed"
-                    render={({ field: { onChange, value } }) => (
-                        <CustomInput label="Breed" placeholder="e.g. Golden Retriever" value={value} onChangeText={onChange} error={errors.breed?.message} />
-                    )}
-                />
-
-                <View style={styles.row}>
-                    <View style={{
-                        flex: 1,
-                        marginRight: 10
-                    }}>
-                        <Controller
-                            control={control}
-                            name="age"
-                            render={({ field: { onChange, value } }) => (
-                                <CustomInput label="Age (Years)" placeholder="2" value={value} onChangeText={onChange} error={errors.age?.message} keyboardType="numeric" />
-                            )}
-                        />
+                        <TouchableOpacity style={[styles.imageBtn, { backgroundColor: Colors.textLight }]} onPress={() => pickImage(true)}>
+                            <Camera size={20} color="white" />
+                            <Text style={styles.btnText}>
+                                Camera
+                            </Text>
+                        </TouchableOpacity>
                     </View>
 
-                    <View style={{ flex: 1 }}>
-                        <Controller
-                            control={control}
-                            name="price"
-                            render={({ field: { onChange, value } }) => (
-                                <CustomInput label="Price ($)" placeholder="500" value={value} onChangeText={onChange} error={errors.price?.message} keyboardType="numeric" />
-                            )}
-                        />
-                    </View>
+                    <TouchableOpacity
+                        style={styles.randomBtn}
+                        onPress={fetchRandomImage}
+                        disabled={fetchingImage}
+                    >
+                        {fetchingImage ? (
+                            <ActivityIndicator color={Colors.primary} />
+                        ) : (
+                            <Text style={styles.randomBtnText}>
+                                ✨ Get Random Dog Photo
+                            </Text>
+                        )}
+                    </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                    style={[styles.submitBtn, loading && { opacity: 0.7 }]}
-                    onPress={handleSubmit(onSubmit)}
-                    disabled={loading}
-                >
-                    {loading ? <ActivityIndicator color="white" /> : <Text style={styles.submitBtnText}> List Pet For Sale</Text>}
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
+                <View style={styles.formCard}>
+                    <Controller
+                        control={control}
+                        name="name"
+                        render={({ field: { onChange, value } }) => (
+                            <CustomInput label="Pet Name" placeholder="e.g. Buddy" value={value} onChangeText={onChange} error={errors.name?.message} />
+                        )}
+                    />
+
+                    <Controller
+                        control={control}
+                        name="breed"
+                        render={({ field: { onChange, value } }) => (
+                            <CustomInput label="Breed" placeholder="e.g. Golden Retriever" value={value} onChangeText={onChange} error={errors.breed?.message} />
+                        )}
+                    />
+
+                    <View style={styles.row}>
+                        <View style={{
+                            flex: 1,
+                            marginRight: 10
+                        }}>
+                            <Controller
+                                control={control}
+                                name="age"
+                                render={({ field: { onChange, value } }) => (
+                                    <CustomInput label="Age (Years)" placeholder="2" value={value} onChangeText={onChange} error={errors.age?.message} keyboardType="numeric" />
+                                )}
+                            />
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                            <Controller
+                                control={control}
+                                name="price"
+                                render={({ field: { onChange, value } }) => (
+                                    <CustomInput label="Price ($)" placeholder="500" value={value} onChangeText={onChange} error={errors.price?.message} keyboardType="numeric" />
+                                )}
+                            />
+                        </View>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.submitBtn, loading && { opacity: 0.7 }]}
+                        onPress={handleSubmit(onSubmit)}
+                        disabled={loading}
+                    >
+                        {loading ? <ActivityIndicator color="white" /> : <Text style={styles.submitBtnText}> List Pet For Sale</Text>}
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
