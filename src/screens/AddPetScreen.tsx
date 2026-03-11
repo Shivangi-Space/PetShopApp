@@ -6,7 +6,9 @@ import {
     ScrollView,
     TouchableOpacity,
     Image,
-    ActivityIndicator
+    ActivityIndicator,
+    Alert,
+    Linking
 } from 'react-native';
 import { Colors } from "../constants/Colors";
 import { useForm, Controller } from 'react-hook-form';
@@ -23,6 +25,7 @@ const AddPetScreen = () => {
 
     const [image, setImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [fetchingImage, setFetchingImage] = useState(false);
     const addPetToStore = usePetStore((state) => state.addPet);
 
     const { control, handleSubmit, reset, formState: { errors } } = useForm<PetFormData>({
@@ -30,15 +33,56 @@ const AddPetScreen = () => {
     })
 
     const pickImage = async (useCamera: boolean) => {
-        let result;
-        if (useCamera) {
-            result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.5 })
-        } else {
-            result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.5 });
-        }
+        try {
+            const permissionResult = useCamera 
+                ? await ImagePicker.requestCameraPermissionsAsync() 
+                : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-        if (!result.canceled) {
-            setImage(result.assets[0].uri);
+            if (permissionResult.granted === false) {
+                if (!permissionResult.canAskAgain) {
+                    Alert.alert(
+                        "Permission Required",
+                        `To upload a pet photo, we need access to your ${useCamera ? 'camera' : 'gallery'}. Please enable it in settings.`,
+                        [
+                            { text: "Cancel", style: "cancel" },
+                            { text: "Open Settings", onPress: () => Linking.openSettings() } // This opens the phone settings
+                        ]
+                    );
+                } else {
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Permission Denied',
+                        text2: `You need to grant ${useCamera ? 'camera' : 'gallery'} access to upload photos.`
+                    });
+                }
+                return; 
+            }
+
+            let result;
+            if (useCamera) {
+                result = await ImagePicker.launchCameraAsync({
+                    allowsEditing: true,
+                    aspect: [1, 1],
+                    quality: 0.5,
+                });
+            } else {
+                result = await ImagePicker.launchImageLibraryAsync({
+                    allowsEditing: true,
+                    aspect: [1, 1],
+                    quality: 0.5,
+                });
+            }
+
+            if (!result.canceled) {
+                setImage(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.log("Image Picker Error: ", error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong while opening the camera.'
+            });
         }
     };
 
@@ -66,6 +110,30 @@ const AddPetScreen = () => {
             Toast.show({ type: 'error', text1: 'Submission Failed', text2: 'Something went wrong' });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchRandomImage = async () => {
+        setFetchingImage(true);
+        try {
+            const response = await axios.get('https://dog.ceo/api/breeds/image/random');
+
+            if (response.data.status === 'success') {
+                setImage(response.data.message);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Success!',
+                    text2: 'Fetched a cute random dog image.',
+                });
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'API error',
+                text2: 'Could not fetch random image.'
+            });
+        } finally {
+            setFetchingImage(false);
         }
     };
 
@@ -98,6 +166,20 @@ const AddPetScreen = () => {
                         </Text>
                     </TouchableOpacity>
                 </View>
+
+                <TouchableOpacity
+                    style={styles.randomBtn}
+                    onPress={fetchRandomImage}
+                    disabled={fetchingImage}
+                >
+                    {fetchingImage ? (
+                        <ActivityIndicator color={Colors.primary} />
+                    ) : (
+                        <Text style={styles.randomBtnText}>
+                            ✨ Get Random Dog Photo
+                        </Text>
+                    )}
+                </TouchableOpacity>
             </View>
 
             <View style={styles.formCard}>
@@ -143,7 +225,7 @@ const AddPetScreen = () => {
                 </View>
 
                 <TouchableOpacity
-                    style={[styles.submitBtn, loading && { opacity: 0.7 }]} 
+                    style={[styles.submitBtn, loading && { opacity: 0.7 }]}
                     onPress={handleSubmit(onSubmit)}
                     disabled={loading}
                 >
@@ -160,7 +242,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.background,
         padding: 20,
     },
-    imageSection : {
+    imageSection: {
         alignItems: 'center',
         marginBottom: 20,
     },
@@ -177,7 +259,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.border,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom:10,
+        marginBottom: 10,
         borderStyle: 'dashed',
         borderWidth: 1
     },
@@ -224,6 +306,20 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    randomBtn: {
+        marginTop: 12,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: Colors.primary,
+        borderRadius: 8,
+        width: '100%',
+        alignItems: 'center',
+        backgroundColor: 'white'
+    },
+    randomBtnText: {
+        color: Colors.primary,
+        fontWeight: '600'
     }
 })
 
